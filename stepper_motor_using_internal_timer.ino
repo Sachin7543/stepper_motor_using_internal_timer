@@ -8,7 +8,8 @@ int flag1 = 0;
 int flag2 = -1;
 int value;
 float value2 = 14;
-int steps = 10;
+int steps = 200;
+int i = 1;
 void setup()
 {
   pinMode(stepPin, OUTPUT);
@@ -22,9 +23,14 @@ void setup()
   TIMSK1 = TIMSK1 | (1 << OCIE1A); // enable timer compare interrup
   sei();
   Serial.begin(9600);
-  Serial.println("1.For changing the direction PRESS :->1 ");
-  Serial.println("2.For changing the Speed TYPE:-> SPEED ");
-
+  Serial.println("SR.NO          Description               *  Keys ");
+  Serial.println("*************************************************");
+  Serial.println("  1)  For changing the direction PRESS   *   1");
+  Serial.println("  2)  For changing the Speed TYPE        * SPEED");
+  Serial.println("  3)  For Start the Motor TYPE           * START");
+  Serial.println("  4)  For Stop the Motor TYPE            * STOP");
+  Serial.println("  5)  For increase Stpe of Motor TYPE    * STEP");
+  Serial.println("*************************************************");
 }
 void loop()
 {
@@ -37,9 +43,10 @@ void loop()
     if(read_input == "START")
     {
        OCR1A  = 14;
-       flag2 = 0;
-       Serial.println("hiiii");
-       
+       flag2 = 0; 
+       i=0;   
+       Serial.println("MOTOR ON");
+   
     }
     value = read_input.toInt();
     if (value == 1)
@@ -52,12 +59,10 @@ void loop()
     if (flag == 1 && (value > 0 && value != 1))
     {
       value1 = read_timer_up(value);
-      Serial.println(value1);
       if ( value1 > 0 && value1 < 65536)
       {
         value2=value1;
-        flag2=0;
-        Serial.println(value2);
+        Serial.println("Speed is Set "+(String)value +"rpm");
       }
       if (((int)value1 <= 0 || (int)value1 > 65536))
       {
@@ -71,27 +76,35 @@ void loop()
     if ( read_input == "STEP")
     {
       flag1 = 1;
+    
     }
     if (read_input == "STOP")
     {
         digitalWrite(dirPin, LOW);
         digitalWrite(stepPin, LOW);
         flag2 = 1;
+        Serial.println("MOTOR OFF");
     }
     if (flag1 == 1 && value > 0) {
       Step(value);
       flag1=0;
+      i = 0;
+      Serial.println("New step value is set"+(String)value);
     }
   }
 }
 ISR(TIMER1_COMPA_vect)          // timer compare interrupt service routine
 {
-  //Serial.println(flag2);
+
   if(flag2 != 1 && flag2 == 0){
   OCR1A  = (int)value2;
+  if(i < steps){
+  Serial.println(i);
   digitalWrite(dirPin, Direction_control);
   state = !state;
   digitalWrite(stepPin, state);
+  i++;
+  }
   }
 }
 void Step(int number_of_steps)
